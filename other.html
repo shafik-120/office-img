@@ -1,0 +1,87 @@
+<style>
+    .customCreateWrapperTexonomy{
+            display: flex;
+    position: absolute;
+    background: black;
+    top: 3rem;
+    z-index: 99;
+    padding: 4rem;
+    }
+</style>
+<script>
+  (function ($) {
+  $(document).ready(function () {
+    // Initially hide all children
+    $('.e-filter-item[data-filter^="child-"]').hide();
+
+    // Loop through each parent item
+    $('.e-filter-item[data-filter^="parent"]').each(function () {
+      var parentSlug = $(this).attr("data-filter").split("-")[1];
+      // Check if this parent has any children
+      if ($('.e-filter-item[data-filter^="child-' + parentSlug + '"]').length > 0) {
+        // Add a class to indicate it has children
+        $(this).addClass("has-children");
+      }
+    });
+
+    // Click event handling
+    $(".e-filter-item").on("click", function () {
+      var selectedFilter = $(this).attr("data-filter");
+      console.log("Selected Filter:", selectedFilter); // Debugging: Check which filter is clicked
+
+      if (!selectedFilter.startsWith("child-")) {
+        var parentSlug = selectedFilter.split("-")[1]; // Extract the slug part of the parent
+        console.log("Extracted Parent Slug:", parentSlug); // Log the extracted parent slug
+        TaxonomyFilter.toggleChildrenVisibility(parentSlug);
+      }
+
+      filterLoopGrid(selectedFilter);
+    });
+  });
+
+  // TaxonomyFilter Object
+  var TaxonomyFilter = {
+    toggleChildrenVisibility: function (parentSlug) {
+      var children = $('.e-filter-item[data-filter^="child-' + parentSlug + '"]');
+
+      // Check if the wrapper already exists
+      var wrapper = $('.customCreateWrapperTexonomy[data-filter="wrapper-' + parentSlug + '"]');
+
+      if (children.is(":visible")) {
+        // If children are visible, hide them
+        children.removeClass("force-show").hide();
+        $('.e-filter-item[data-filter="parent-' + parentSlug + '"]').removeClass("customcsstexonomy");
+        console.log("Children hidden for parentSlug:", parentSlug);
+      } else {
+        // If children are not visible, wrap them if not already wrapped
+        if (wrapper.length === 0) {
+          children.wrapAll('<div class="customCreateWrapperTexonomy" data-filter="wrapper-' + parentSlug + '"></div>');
+        }
+        children.addClass("force-show").show();
+        $('.e-filter-item[data-filter="parent-' + parentSlug + '"]').addClass("customcsstexonomy");
+        console.log("Children shown for parentSlug:", parentSlug);
+      }
+    },
+  };
+
+  function filterLoopGrid(filter) {
+    $(".elementor-loop-container .elementor-grid-item").hide();
+    if (filter === "all") {
+      $(".elementor-loop-container .elementor-grid-item").show();
+    } else if (filter.startsWith("child-")) {
+      $('.elementor-loop-container .elementor-grid-item[data-category="' + filter + '"]').show();
+    } else {
+      $(".elementor-loop-container .elementor-grid-item")
+        .filter(function () {
+          var itemCategory = $(this).attr("data-category");
+          return (
+            itemCategory === filter ||
+            itemCategory.startsWith("child-" + filter.split("-")[1])
+          );
+        })
+        .show();
+    }
+  }
+})(jQuery);
+
+</script>
